@@ -9,9 +9,9 @@ app_port: 7860
 
 # RAG Chat
 
-Application Gradio de questions-réponses sur des fichiers PDF, avec Mistral pour le
-modèle et les embeddings. Neon PostgreSQL avec l'extension pgvector stocke
-l'historique et les vecteurs, et Mistral fournit le modèle ainsi que les embeddings.
+Application Gradio de questions-réponses sur des fichiers PDF. Le chemin Docker
+utilise Ollama pour le modèle et les embeddings. Neon PostgreSQL avec l'extension
+pgvector stocke l'historique et les vecteurs.
 
 ### Lancer avec Docker Compose
 
@@ -19,9 +19,14 @@ l'historique et les vecteurs, et Mistral fournit le modèle ainsi que les embedd
 docker compose up --build
 ```
 
-Copiez `.env.example` vers `.env` et renseignez les variables Mistral et Neon.
-Le Compose utilise Neon comme base externe et conserve seulement les fichiers
-PDF dans le volume local `rag_data`.
+Copiez `.env.example` vers `.env` et renseignez les variables Neon
+`POSTGRES_URL` et `PGVECTOR_URL`. Le Compose démarre Ollama, télécharge
+automatiquement `llama3.2` et `nomic-embed-text`, puis conserve les modèles
+dans le volume `ollama_data`. Les fichiers PDF sont conservés dans `rag_data`.
+
+Le premier démarrage peut prendre plusieurs minutes selon la taille des modèles.
+Les modèles utilisés peuvent être changés avec `OLLAMA_MODEL` et
+`OLLAMA_EMBEDDING_MODEL`.
 
 ### Lancer localement
 

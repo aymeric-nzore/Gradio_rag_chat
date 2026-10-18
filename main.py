@@ -4,6 +4,7 @@ import gradio as gr
 from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI, MistralAIEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 from langchain_core.stores import InMemoryStore
@@ -151,7 +152,8 @@ PGVECTOR_URL = os.getenv(
     "PGVECTOR_URL",
     POSTGRES_URL.replace("postgresql://", "postgresql+psycopg://", 1),
 )
-VECTOR_COLLECTION = "chat_docs"
+VECTOR_COLLECTION = os.getenv("VECTOR_COLLECTION", "chat_docs")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "mistral").lower()
 
 def init_db():
     """Initialize PostgreSQL tables for conversation history."""
@@ -253,6 +255,12 @@ qa_prompt = ChatPromptTemplate.from_messages([
 ])
 
 def get_llm(temperature=0.5):
+    if LLM_PROVIDER == "ollama":
+        return ChatOllama(
+            model=os.getenv("OLLAMA_MODEL", "llama3.2"),
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            temperature=temperature,
+        )
     return ChatMistralAI(
         model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
         temperature=temperature,
@@ -260,6 +268,11 @@ def get_llm(temperature=0.5):
     )
 
 def get_embeddings():
+    if LLM_PROVIDER == "ollama":
+        return OllamaEmbeddings(
+            model=os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        )
     return MistralAIEmbeddings(
         model=os.getenv("MISTRAL_EMBEDDING_MODEL", "mistral-embed"),
     )

@@ -6,9 +6,11 @@ services:
       RAG_DATA_DIR: /data
       POSTGRES_URL: ${POSTGRES_URL:?Set POSTGRES_URL in .env}
       PGVECTOR_URL: ${PGVECTOR_URL:?Set PGVECTOR_URL in .env}
-      MISTRAL_API_KEY: ${MISTRAL_API_KEY:?Set MISTRAL_API_KEY in .env}
-      MISTRAL_MODEL: ${MISTRAL_MODEL:-mistral-small-latest}
-      MISTRAL_EMBEDDING_MODEL: ${MISTRAL_EMBEDDING_MODEL:-mistral-embed}
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      VECTOR_COLLECTION: ${VECTOR_COLLECTION:-chat_docs_ollama}
       GRADIO_SERVER_NAME: 0.0.0.0
       GRADIO_SERVER_PORT: 7860
     ports:
@@ -16,6 +18,36 @@ services:
     volumes:
       - rag_data:/data
     restart: unless-stopped
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ollama-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "ollama pull $$OLLAMA_MODEL && ollama pull $$OLLAMA_EMBEDDING_MODEL"
 
 volumes:
   rag_data:
+  ollama_data:
