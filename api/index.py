@@ -180,6 +180,9 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+app.add_api_route("/api/health", health, methods=["GET"])
+
+
 @app.get("/conversations")
 def list_conversations() -> list[dict[str, Any]]:
     initialize_database()
@@ -194,6 +197,9 @@ def list_conversations() -> list[dict[str, Any]]:
     return [{"id": row[0], "title": row[1], "created_at": row[2]} for row in rows]
 
 
+app.add_api_route("/api/conversations", list_conversations, methods=["GET"])
+
+
 @app.get("/conversations/{conversation_id}")
 def get_conversation(conversation_id: int) -> dict[str, Any]:
     initialize_database()
@@ -203,6 +209,11 @@ def get_conversation(conversation_id: int) -> dict[str, Any]:
         "id": conversation_id,
         "messages": conversation_history(conversation_id),
     }
+
+
+app.add_api_route(
+    "/api/conversations/{conversation_id}", get_conversation, methods=["GET"]
+)
 
 
 @app.post("/upload")
@@ -236,6 +247,9 @@ async def upload_pdf(file: UploadFile = File(...)) -> dict[str, Any]:
             Path(temporary_path).unlink(missing_ok=True)
 
 
+app.add_api_route("/api/upload", upload_pdf, methods=["POST"])
+
+
 @app.post("/chat")
 def chat(request: ChatRequest) -> dict[str, Any]:
     initialize_database()
@@ -250,6 +264,9 @@ def chat(request: ChatRequest) -> dict[str, Any]:
     return {"answer": response}
 
 
+app.add_api_route("/api/chat", chat, methods=["POST"])
+
+
 @app.delete("/conversations/{conversation_id}")
 def delete_conversation(conversation_id: int) -> dict[str, bool]:
     initialize_database()
@@ -260,3 +277,10 @@ def delete_conversation(conversation_id: int) -> dict[str, bool]:
     if cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail="Conversation introuvable")
     return {"deleted": True}
+
+
+app.add_api_route(
+    "/api/conversations/{conversation_id}",
+    delete_conversation,
+    methods=["DELETE"],
+)
