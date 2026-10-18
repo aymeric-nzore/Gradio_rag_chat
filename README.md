@@ -60,3 +60,26 @@ Neon.
 
 Les modèles par défaut sont `mistral-small-latest` et `mistral-embed`. Ils
 peuvent être remplacés par `MISTRAL_MODEL` et `MISTRAL_EMBEDDING_MODEL`.
+
+## Déployer sur Vercel
+
+Vercel n'exécute pas un serveur Gradio permanent. Le projet fournit donc une
+variante Vercel avec une API FastAPI stateless et une interface web statique :
+
+- `api/index.py` expose l'API RAG ;
+- `public/index.html` fournit l'interface utilisateur ;
+- `vercel.json` route `/api/*` vers FastAPI ;
+- `requirements.txt` contient uniquement les dépendances de la fonction Vercel.
+
+1. Importez ce dépôt GitHub dans Vercel.
+2. Dans les variables d'environnement du projet, ajoutez
+   `MISTRAL_API_KEY`, `POSTGRES_URL` et `PGVECTOR_URL`.
+3. Déployez le projet.
+4. Ouvrez l'URL Vercel et importez un PDF.
+
+Les fichiers PDF sont traités dans la fonction puis supprimés du disque
+temporaire. Les messages et les embeddings sont persistés dans Neon. Cette
+variante ne dépend pas de Gradio, d'Ollama ou d'un volume local.
+
+Vercel impose des limites de durée et de taille aux fonctions. Pour de gros
+PDF ou des traitements très longs, une plateforme persistante reste préférable.
