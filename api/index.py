@@ -163,7 +163,7 @@ def answer_question(request: ChatRequest) -> str:
     response = ChatMistralAI(
         model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
         temperature=request.temperature,
-        max_retries=2,
+        max_retries=0,
     ).invoke(
         [
             SystemMessage(content="Tu es un assistant RAG précis et utile."),
@@ -171,6 +171,13 @@ def answer_question(request: ChatRequest) -> str:
         ]
     )
     return str(response.content)
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    status_code = getattr(error, "status_code", None)
+    if status_code == 429:
+        return True
+    return "429" in str(error) or "rate limit" in str(error).lower()
 
 
 @app.get("/health")
@@ -259,6 +266,15 @@ def chat(request: ChatRequest) -> dict[str, Any]:
     try:
         response = answer_question(request)
     except Exception as exc:
+        if is_rate_limit_error(exc):
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Limite Mistral atteinte. Attendez quelques instants, "
+                    "vérifiez les quotas de votre compte Mistral ou utilisez "
+                    "une clé API avec un quota disponible."
+                ),
+            ) from exc
         raise HTTPException(status_code=502, detail=f"Réponse Mistral impossible: {exc}") from exc
     save_message(request.conversation_id, "assistant", response, request.temperature)
     return {"answer": response}

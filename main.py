@@ -256,7 +256,7 @@ def get_llm(temperature=0.5):
     return ChatMistralAI(
         model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
         temperature=temperature,
-        max_retries=2,
+        max_retries=0,
     )
 
 def get_embeddings():
