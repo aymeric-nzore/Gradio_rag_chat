@@ -43,15 +43,23 @@
       }
       document.querySelector("#upload-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const data = new FormData();
-        data.append("file", document.querySelector("#pdf").files[0]);
-        status.textContent = "Import en cours...";
-        const response = await fetch("/api/upload", { method: "POST", body: data });
-        const result = await response.json();
-        if (!response.ok) { status.textContent = result.detail || "Erreur d'import"; return; }
-        conversationId = result.id;
-        messages.replaceChildren();
-        status.textContent = "PDF importé.";
+        try {
+          const data = new FormData();
+          data.append("file", document.querySelector("#pdf").files[0]);
+          status.textContent = "Import en cours...";
+          const response = await fetch("/api/upload", { method: "POST", body: data });
+          const contentType = response.headers.get("content-type") || "";
+          if (!contentType.includes("application/json")) {
+            throw new Error(`Réponse inattendue du serveur (${response.status})`);
+          }
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.detail || "Erreur d'import");
+          conversationId = result.id;
+          messages.replaceChildren();
+          status.textContent = "PDF importé.";
+        } catch (error) {
+          status.textContent = error.message || "Erreur réseau pendant l'import";
+        }
       });
       document.querySelector("#chat-form").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -62,15 +70,23 @@
         addMessage("user", message);
         input.value = "";
         status.textContent = "Mistral prépare une réponse...";
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversation_id: conversationId, message })
-        });
-        const result = await response.json();
-        if (!response.ok) { status.textContent = result.detail || "Erreur de réponse"; return; }
-        addMessage("assistant", result.answer);
-        status.textContent = "";
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversation_id: conversationId, message })
+          });
+          const contentType = response.headers.get("content-type") || "";
+          if (!contentType.includes("application/json")) {
+            throw new Error(`Réponse inattendue du serveur (${response.status})`);
+          }
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.detail || "Erreur de réponse");
+          addMessage("assistant", result.answer);
+          status.textContent = "";
+        } catch (error) {
+          status.textContent = error.message || "Erreur réseau pendant la requête";
+        }
       });
     </script>
   </body>
