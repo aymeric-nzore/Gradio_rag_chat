@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+    environment:
+      RAG_DATA_DIR: /data
+      POSTGRES_URL: ${POSTGRES_URL:?Set POSTGRES_URL in .env}
+      PGVECTOR_URL: ${PGVECTOR_URL:?Set PGVECTOR_URL in .env}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:?Set MISTRAL_API_KEY in .env}
+      MISTRAL_MODEL: ${MISTRAL_MODEL:-mistral-small-latest}
+      MISTRAL_EMBEDDING_MODEL: ${MISTRAL_EMBEDDING_MODEL:-mistral-embed}
+      GRADIO_SERVER_NAME: 0.0.0.0
+      GRADIO_SERVER_PORT: 7860
+    ports:
+      - "7860:7860"
+    volumes:
+      - rag_data:/data
+    restart: unless-stopped
+
+volumes:
+  rag_data:

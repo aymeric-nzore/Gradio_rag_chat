@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+.git
+.gradio
+chroma_db
+conversation_history.db
+uploads
+.env
