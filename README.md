@@ -26,9 +26,13 @@ PDF dans le volume local `rag_data`.
 ### Lancer localement
 
 ```bash
-uv sync
-uv run python main.py
+uv pip install --system -r docker-requirements.txt
+python main.py
 ```
+
+Les dépendances du frontend Vercel et celles de l'application Gradio sont
+séparées afin d'éviter d'embarquer Torch, Whisper et Gradio dans la fonction
+serverless.
 
 ## Déployer sur Hugging Face Spaces avec Neon
 

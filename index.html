@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RAG Chat</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { max-width: 900px; margin: 0 auto; padding: 24px; background: #111827; color: #f9fafb; }
+      button, input { border: 0; border-radius: 8px; padding: 10px 12px; }
+      button { cursor: pointer; background: #2563eb; color: white; }
+      input { background: #1f2937; color: white; width: 100%; box-sizing: border-box; }
+      form { display: flex; gap: 8px; margin: 16px 0; }
+      #messages { display: grid; gap: 12px; margin: 20px 0; }
+      .message { padding: 12px; border-radius: 10px; white-space: pre-wrap; }
+      .user { background: #1d4ed8; margin-left: 18%; }
+      .assistant { background: #374151; margin-right: 18%; }
+      #status { color: #93c5fd; min-height: 24px; }
+    </style>
+  </head>
+  <body>
+    <h1>RAG Chat</h1>
+    <p>Importez un PDF puis posez une question à Mistral.</p>
+    <form id="upload-form">
+      <input id="pdf" type="file" accept="application/pdf" required>
+      <button>Importer</button>
+    </form>
+    <form id="chat-form">
+      <input id="question" placeholder="Votre question..." required>
+      <button>Envoyer</button>
+    </form>
+    <div id="status"></div>
+    <main id="messages"></main>
+    <script>
+      let conversationId = null;
+      const status = document.querySelector("#status");
+      const messages = document.querySelector("#messages");
+      function addMessage(role, content) {
+        const node = document.createElement("div");
+        node.className = `message ${role}`;
+        node.textContent = content;
+        messages.appendChild(node);
+      }
+      document.querySelector("#upload-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = new FormData();
+        data.append("file", document.querySelector("#pdf").files[0]);
+        status.textContent = "Import en cours...";
+        const response = await fetch("/api/upload", { method: "POST", body: data });
+        const result = await response.json();
+        if (!response.ok) { status.textContent = result.detail || "Erreur d'import"; return; }
+        conversationId = result.id;
+        messages.replaceChildren();
+        status.textContent = "PDF importé.";
+      });
+      document.querySelector("#chat-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!conversationId) { status.textContent = "Importez d'abord un PDF."; return; }
+        const input = document.querySelector("#question");
+        const message = input.value.trim();
+        if (!message) return;
+        addMessage("user", message);
+        input.value = "";
+        status.textContent = "Mistral prépare une réponse...";
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversation_id: conversationId, message })
+        });
+        const result = await response.json();
+        if (!response.ok) { status.textContent = result.detail || "Erreur de réponse"; return; }
+        addMessage("assistant", result.answer);
+        status.textContent = "";
+      });
+    </script>
+  </body>
+</html>
