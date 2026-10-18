@@ -267,7 +267,7 @@ def get_embeddings():
 def get_vector_db():
     return PGVector(
         collection_name=VECTOR_COLLECTION,
-        embedding_function=get_embeddings(),
+        embeddings=get_embeddings(),
         connection=PGVECTOR_URL,
         use_jsonb=True,
     )

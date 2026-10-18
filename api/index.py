@@ -87,7 +87,7 @@ def vector_store() -> PGVector:
     require_configuration()
     return PGVector(
         collection_name=VECTOR_COLLECTION,
-        embedding_function=MistralAIEmbeddings(
+        embeddings=MistralAIEmbeddings(
             model=os.getenv("MISTRAL_EMBEDDING_MODEL", "mistral-embed")
         ),
         connection=PGVECTOR_URL,
