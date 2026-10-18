@@ -71,9 +71,10 @@ Vercel n'exécute pas un serveur Gradio permanent. Le projet fournit donc une
 variante Vercel avec une API FastAPI stateless et une interface web statique :
 
 - `api/index.py` expose l'API RAG ;
-- `public/index.html` fournit l'interface utilisateur ;
-- `vercel.json` route `/api/*` vers FastAPI ;
-- `requirements.txt` contient uniquement les dépendances de la fonction Vercel.
+- `index.html` fournit l'interface utilisateur ;
+- `pyproject.toml` et `uv.lock` contiennent uniquement les dépendances de la
+  fonction Vercel. Vercel détecte automatiquement `api/index.py` comme fonction
+  Python ; aucun fichier `vercel.json` n'est nécessaire.
 
 1. Importez ce dépôt GitHub dans Vercel.
 2. Dans les variables d'environnement du projet, ajoutez
